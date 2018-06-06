@@ -341,19 +341,21 @@ NSMutableDictionary *fileStreams = nil;
         encoding = [encoding lowercaseString];
         if(![fm fileExistsAtPath:folder]) {
             [fm createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:NULL error:&err];
-            [fm createFileAtPath:path contents:nil attributes:nil];
         }
         if(err != nil) {
-            reject(@"RNFetchBlob writeFile Error", @"could not create file at path", nil);
+            reject(@"RNFetchBlob writeFile Error", @"could not create parent directory at path", err);
             return;
         }
-        NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingAtPath:path];
         NSData * content = nil;
         if([encoding RNFBContainsString:@"base64"]) {
-            content = [[NSData alloc] initWithBase64EncodedString:data options:0];
+            content = [[NSData alloc] initWithBase64EncodedString:data options: NSDataBase64DecodingIgnoreUnknownCharacters];
+            if (content == nil) {
+                reject(@"RNFetchBlob writeFile Error", @"Error attempting to decode base64 data", nil);
+                return;
+            }
         }
         else if([encoding isEqualToString:@"uri"]) {
-            NSNumber* size = [[self class] writeFileFromFile:data toFile:path append:append callback:^(NSString *errMsg, NSNumber *size) {
+            [[self class] writeFileFromFile:data toFile:path append:append callback:^(NSString *errMsg, NSNumber *size) {
                 if(errMsg != nil)
                     reject(@"RNFetchBlob writeFile Error", errMsg, nil);
                 else
@@ -363,22 +365,48 @@ NSMutableDictionary *fileStreams = nil;
         }
         else {
             content = [data dataUsingEncoding:NSUTF8StringEncoding];
+            if (content == nil) {
+                reject(@"RNFetchBlob writeFile Error", @"Error attempting to decode UTF8 data", nil);
+                return;
+            }
         }
         if(append == YES) {
+            NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingAtPath:path];
             [fileHandle seekToEndOfFile];
             [fileHandle writeData:content];
             [fileHandle closeFile];
         }
         else {
-            [content writeToFile:path atomically:YES];
+            BOOL isDir;
+            if([fm fileExistsAtPath:path isDirectory:&isDir]) {
+                if (isDir) {
+                    reject(@"RNFetchBlob writeFile Error", @"a matching directory name exists at the specified file path", nil);
+                    return;
+                } else {
+                    [fm removeItemAtPath:path error:&err];
+                    if(err != nil) {
+                        reject(@"RNFetchBlob writeFile Error", @"file exists and could not overwrite failed", err);
+                        return;
+                    }
+                }
+            }
+            [content writeToFile:path options:(NSDataWritingFileProtectionNone & NSDataWritingAtomic) error:&err];
+            if (err != nil) {
+                reject(@"RNFetchBlob writeFile Error", @"a matching directory name exists at the specified file path", nil);
+            }
+            // alternatively...
+            // BOOL success = [fm createFileAtPath:path contents:content attributes:nil];
+            // if (!success) {
+            //     reject(@"RNFetchBlob writeFile Error", @"could not create file; FileManager.createFileAtPath failed", nil);
+            // }
         }
         fm = nil;
-
+        
         resolve([NSNumber numberWithInteger:[content length]]);
     }
     @catch (NSException * e)
     {
-        reject(@"RNFetchBlob writeFile Error", @"Error", [e description]);
+        reject(@"RNFetchBlob writeFile Error", [e description], nil);
     }
 }
 
