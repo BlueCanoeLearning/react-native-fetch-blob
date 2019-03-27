@@ -520,7 +520,7 @@ public class RNFetchBlobFS {
         }
         else if(isResource(path)) {
                 String fileName = path.replaceFirst(".*/");
-                int resId = RNFetchBlob.RCTContext.getResources().getIdentifier(fileName, "raw", this.context.getPackageName());
+                int resId = RNFetchBlob.RCTContext.getResources().getIdentifier(fileName, "raw", RNFetchBlob.RCTContext.getPackageName());
                 boolean exists = resId != 0;
                 callback.invoke(exists, false);
         }
