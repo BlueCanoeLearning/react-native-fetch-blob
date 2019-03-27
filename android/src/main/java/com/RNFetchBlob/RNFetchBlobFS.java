@@ -519,7 +519,7 @@ public class RNFetchBlobFS {
             }
         }
         else if(isResource(path)) {
-                String fileName = path.replaceFirst(".*/", "").replaceFirst("\.[A-Za-z0-9_]*$","").replaceFirst(".[A-Za-z0-9_]*$","");
+                String fileName = path.replaceFirst(".*/", "").replaceFirst(".[A-Za-z0-9_]*$","");
                 int resId = RNFetchBlob.RCTContext.getResources().getIdentifier(fileName, "raw", RNFetchBlob.RCTContext.getPackageName());
                 boolean exists = resId != 0;
                 callback.invoke(exists, false);
