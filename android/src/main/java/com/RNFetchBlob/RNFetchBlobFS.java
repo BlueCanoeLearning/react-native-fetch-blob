@@ -518,6 +518,12 @@ public class RNFetchBlobFS {
                 callback.invoke(false, false);
             }
         }
+        else if(isResource(path)) {
+                String fileName = path.replaceFirst(".*/", "").replaceFirst(".[A-Za-z0-9_]*$","");
+                int resId = RNFetchBlob.RCTContext.getResources().getIdentifier(fileName, "raw", RNFetchBlob.RCTContext.getPackageName());
+                boolean exists = resId != 0;
+                callback.invoke(exists, false);
+        }
         else {
             path = normalizePath(path);
             boolean exist = new File(path).exists();
@@ -893,6 +899,13 @@ public class RNFetchBlobFS {
     static boolean isAsset(String path) {
         if(path != null)
             return path.startsWith(RNFetchBlobConst.FILE_PREFIX_BUNDLE_ASSET);
+        return false;
+    }
+
+    static boolean isResource(String path) {
+        if (path != null) {
+            return path.startsWith(RNFetchBlobConst.FILE_PREFIX_RESOURCE);
+        }
         return false;
     }
 
