@@ -1,6 +1,8 @@
+package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
+
 Pod::Spec.new do |s|
   s.name             = "react-native-fetch-blob"
-  s.version          = "0.11.6"
+  s.version          =  package['version']
   s.summary          = "A project committed to make file acess and data transfer easier, effiecient for React Native developers."
   s.requires_arc = true
   s.license      = 'MIT'
