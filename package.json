@@ -1,6 +1,6 @@
 {
   "name": "react-native-fetch-blob",
-  "version": "1.11.8",
+  "version": "2.0.0",
   "description": "A module provides upload, download, and files access API. Supports file stream read/write for process large files.",
   "main": "index.js",
   "scripts": {
